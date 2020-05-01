@@ -23,12 +23,12 @@ class CreateTransactionService {
   }: Request): Promise<Transaction> {
     const categoryRepository = getRepository(Category);
     const transactionRepository = getCustomRepository(TransactionRepository);
-    let transaction;
 
     const checkCategoryExists = await categoryRepository.findOne({
       where: { title: category },
     });
 
+    let transaction;
     if (checkCategoryExists) {
       transaction = transactionRepository.create({
         title,
