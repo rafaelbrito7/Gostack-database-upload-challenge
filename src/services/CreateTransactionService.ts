@@ -1,7 +1,6 @@
-// import AppError from '../errors/AppError';
-
 import { getRepository, getCustomRepository } from 'typeorm';
 
+import AppError from '../errors/AppError';
 import TransactionRepository from '../repositories/TransactionsRepository';
 
 import Transaction from '../models/Transaction';
@@ -24,32 +23,29 @@ class CreateTransactionService {
     const categoryRepository = getRepository(Category);
     const transactionRepository = getCustomRepository(TransactionRepository);
 
-    const checkCategoryExists = await categoryRepository.findOne({
+    const { total } = await transactionRepository.getBalance();
+
+    if (type === 'outcome' && value > total) {
+      throw new AppError('No money available');
+    }
+
+    const transaction = transactionRepository.create({
+      title,
+      value,
+      type,
+    });
+
+    const categoryExists = await categoryRepository.findOne({
       where: { title: category },
     });
 
-    let transaction;
-    if (checkCategoryExists) {
-      transaction = transactionRepository.create({
-        title,
-        value,
-        type,
-        category_id: checkCategoryExists.id,
-      });
-    } else {
-      const newCategory = categoryRepository.create({
-        title: category,
-      });
-
-      await categoryRepository.save(newCategory);
-
-      transaction = transactionRepository.create({
-        title,
-        value,
-        type,
-        category_id: newCategory.id,
-      });
-    }
+    categoryExists
+      ? (transaction.category = categoryExists)
+      : (transaction.category = await categoryRepository.save(
+          categoryRepository.create({
+            title: category,
+          }),
+        ));
 
     await transactionRepository.save(transaction);
 

@@ -33,6 +33,6 @@ export default class CreateCategory1588347820577 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<any> {
-    await queryRunner.dropTable('category');
+    await queryRunner.dropTable('categories');
   }
 }
